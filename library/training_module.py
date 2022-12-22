@@ -1,11 +1,11 @@
 import logging
-import numpy as np
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from scipy.special import inv_boxcox
 from library.fb_prophet import ideal_prophet
-from library.holts_library import additive_trend, multiplicative_trend, a_a_seasonality, a_m_seasonality, m_a_seasonality, m_m_seasonality
+from library.holts_library import additive_trend, multiplicative_trend, a_a_seasonality, a_m_seasonality, \
+    m_a_seasonality, m_m_seasonality
 from library.arima_library import make_stationary, lagged_correlation, auto_regressive, arma, arima
 
 
@@ -33,7 +33,7 @@ def train_predict(
     data.loc[data[project] <= 0].interpolate(limit_direction="both")
 
     # Deciding test length basis total available data
-    if (len(data) >= 3) and (len(date) <= 5):
+    if (len(data) >= 3) and (len(data) <= 5):
         test_len = 1
     elif len(data) > 5:
         test_len = 3
@@ -151,22 +151,3 @@ def train_predict(
     result = round(result, 0).abs()
 
     return model_performance, result
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
