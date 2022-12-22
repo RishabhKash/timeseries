@@ -15,8 +15,8 @@ def ideal_prophet(data: pd.DataFrame, train_len: int, test_len: int, project: st
         data = data.rename(columns={project: "y", data.columns[0]: "ds"})
         m = Prophet(daily_seasonality=False, weekly_seasonality=False)
         model = m.fit(data[:train_len])
-        future = m.make_future_dataframe(periods=test_len, freq="M")
-        forecast = m.predict(future)
+        future = model.make_future_dataframe(periods=test_len, freq="M")
+        forecast = model.predict(future)
 
         rmse = np.sqrt(mean_squared_error(data['y'][-test_len:], forecast['yhat'][-test_len:])).round(2)
         mape = np.round(
