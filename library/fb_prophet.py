@@ -11,7 +11,7 @@ def ideal_prophet(data: pd.DataFrame, train_len: int, test_len: int, project: st
     """
 
     try:
-        data = data.reset_index()
+        # data = data.reset_index()
         data = data.rename(columns={project: "y", data.columns[0]: "ds"})
         m = Prophet(daily_seasonality=False, weekly_seasonality=False)
         model = m.fit(data[:train_len])
