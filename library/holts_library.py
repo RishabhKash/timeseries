@@ -108,7 +108,7 @@ def simple_exponential(data: pd.DataFrame, train_len: int, test_len: int, projec
 
 def additive_trend(data: pd.DataFrame, train_len: int, test_len: int, project: str) -> pd.DataFrame:
     """
-    Returns a additive trend exponential model along with its performance metrics
+    Returns an additive trend exponential model along with its performance metrics
 
     Args:
         data: dataset
@@ -506,4 +506,3 @@ def m_m_seasonality(data: pd.DataFrame, train_len: int, test_len: int, project: 
                 'Q': [0]
             }
         )
-

@@ -21,7 +21,7 @@ def ideal_prophet(data: pd.DataFrame, train_len: int, test_len: int, project: st
         rmse = np.sqrt(mean_squared_error(data['y'][-test_len:], forecast['yhat'][-test_len:])).round(2)
         mape = np.round(
             np.mean(
-                np.abs(data['y'][-test_len:].values - forecast['yhat'][-test_len:].values)/
+                np.abs(data['y'][-test_len:].values - forecast['yhat'][-test_len:].values) /
                 data['y'][-test_len:].values
             ) * 100, 2
         )

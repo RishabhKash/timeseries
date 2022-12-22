@@ -39,7 +39,7 @@ def make_stationary(data: pd.Series, project: str, alpha: float = 0.05):
         # Perform ADF test
         result = sm.tsa.stattools.adfuller(boxcox_data.diff(i).dropna())
         # Append p-value
-        p_values.append((i,result[1]))
+        p_values.append((i, result[1]))
 
     # Keep only those where p-value is lower than significance level
     significant = [p for p in p_values if p[1] < alpha]
@@ -147,7 +147,7 @@ def auto_regressive(
             rmse = np.sqrt(mean_squared_error(data[project][-test_len:], prediction['ar'][-test_len:])).round(2)
             mape = np.round(
                 np.mean(
-                    np.abs(data[project][-test_len:] - prediction['ar'][-test_len:])/
+                    np.abs(data[project][-test_len:] - prediction['ar'][-test_len:]) /
                     data[project][-test_len:]
                 ) * 100, 2
             )
@@ -272,7 +272,7 @@ def moving_average(
             rmse = np.sqrt(mean_squared_error(data[project][-test_len:], prediction['ma'][-test_len:])).round(2)
             mape = np.round(
                 np.mean(
-                    np.abs(data[project][-test_len:] - prediction['ma'][-test_len:])/
+                    np.abs(data[project][-test_len:] - prediction['ma'][-test_len:]) /
                     data[project][-test_len:]
                 ) * 100, 2
             )
@@ -381,9 +381,9 @@ def arma(
         for items in pacf:
             for levels in acf:
                 if diff_order:
-                    arma = sm.tsa.ARIMA(stationary_data, order=(items[0], 0, levels[0])).fit()
+                    arma_model = sm.tsa.ARIMA(stationary_data, order=(items[0], 0, levels[0])).fit()
                     prediction = data.copy()
-                    prediction['arma_boxcox_diff'] = arma.predict(data.index[diff_order], data.index.max())
+                    prediction['arma_boxcox_diff'] = arma_model.predict(data.index[diff_order], data.index.max())
                     prediction['arma_boxcox'] = prediction['arma_boxcox_diff'].cumsum()
                     count = 0
                     while count < diff_order:
@@ -391,9 +391,9 @@ def arma(
                         count += 1
 
                 else:
-                    arma = sm.tsa.ARIMA(boxcox_data, order=(items[0], 0, levels[0])).fit()
+                    arma_model = sm.tsa.ARIMA(boxcox_data, order=(items[0], 0, levels[0])).fit()
                     prediction = data.copy()
-                    prediction['arma_boxcox'] = arma.predict(data.index.min(), data.index.max())
+                    prediction['arma_boxcox'] = arma_model.predict(data.index.min(), data.index.max())
 
                 prediction['arma'] = inv_boxcox(prediction['arma_boxcox'], lmbda)
                 rmse = np.sqrt(mean_squared_error(data[project][-test_len:], prediction['arma'][-test_len:])).round(2)
@@ -508,7 +508,7 @@ def arima(
         rmse = np.sqrt(mean_squared_error(data[project][train_len:], prediction)).round(2)
         mape = np.round(
             np.mean(
-                np.abs(data[project][train_len:] - prediction)/
+                np.abs(data[project][train_len:] - prediction) /
                 data[project][train_len:]
             ) * 100, 2
         )
