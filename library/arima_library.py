@@ -108,10 +108,10 @@ def auto_regressive(
         project: str
 ):
     """
-    Function to train autoregressive model
+    Function to train autoregressive algorithm
 
     Args:
-        pacf: partially auto correlated values
+        pacf: partially auto correlated lags
         boxcox_data: log transformed data
         stationary_data: difference data
         test_len: length of data for testing
@@ -124,6 +124,7 @@ def auto_regressive(
         autoregressive model object along with its performance metrics
     """
 
+    logging.info("AR modelling!")
     try:
         performance = []
         for items in pacf:
@@ -153,7 +154,7 @@ def auto_regressive(
 
             performance.append((items[0], rmse, mape))
         performance = sorted(performance, key=lambda x: x[1])
-        if (diff_order and performance):
+        if diff_order and performance:
             arm = sm.tsa.ARIMA(stationary_data, order=(performance[0][0], 0, 0)).fit()
             return pd.DataFrame(
                 {
@@ -162,7 +163,7 @@ def auto_regressive(
                     'rmse': [rmse],
                     'mape': [mape],
                     'p': [performance[0][0]],
-                    'd': [0],
+                    'd': [diff_order],
                     'q': [0],
                     'P': [0],
                     'D': [0],
@@ -203,8 +204,8 @@ def auto_regressive(
                 }
             )
 
-    except BaseException:
-        logging.exception('Error encountered in auto_regressive!')
+    except Exception as e:
+        logging.error("Error while training Auto_Regressive: %s", e)
         return pd.DataFrame(
             {
                 'Object': None,
@@ -221,3 +222,329 @@ def auto_regressive(
         )
 
 
+def moving_average(
+        acf: list,
+        boxcox_data: pd.DataFrame,
+        stationary_data: pd.DataFrame,
+        test_len: int,
+        data: pd.DataFrame,
+        diff_order: int,
+        lmbda: float,
+        project: str
+):
+    """
+    Function to train moving average algorithm
+
+    Args:
+        acf: auto correlated lags
+        boxcox_data: log transformed data
+        stationary_data: difference data
+        test_len: length of data for testing
+        data: dataset
+        diff_order: level of differencing performed
+        lmbda: inverse value
+        project: name of prediction column
+
+    Return:
+        moving average model object along with its performance metrics
+    """
+
+    logging.info("MA modelling!")
+    try:
+        performance = []
+        for items in acf:
+            if diff_order:
+                ma = sm.tsa.ARIMA(stationary_data, order=(0, 0, items[0])).fit()
+                prediction = data.copy()
+                prediction['ma_boxcox_diff'] = ma.predict(data.index[diff_order], data.index.max())
+                prediction['ma_boxcox'] = prediction['ma_boxcox_diff'].cumsum()
+                count = 0
+                while count < diff_order:
+                    prediction['ma_boxcox'] = prediction['ma_boxcox'].add(boxcox_data[count])
+                    count += 1
+
+            else:
+                ma = sm.tsa.ARIMA(boxcox_data, order=(0, 0, items[0])).fit()
+                prediction = data.copy()
+                prediction['ma_boxcox'] = ma.predict(data.index.min(), data.index.max())
+
+            prediction['ma'] = inv_boxcox(prediction['ma_boxcox'], lmbda)
+            rmse = np.sqrt(mean_squared_error(data[project][-test_len:], prediction['ma'][-test_len:])).round(2)
+            mape = np.round(
+                np.mean(
+                    np.abs(data[project][-test_len:] - prediction['ma'][-test_len:])/
+                    data[project][-test_len:]
+                ) * 100, 2
+            )
+
+            performance.append((items[0], rmse, mape))
+        performance = sorted(performance, key=lambda x: x[1])
+        if diff_order and performance:
+            movingaverage = sm.tsa.ARIMA(stationary_data, order=(0, 0, performance[0][0])).fit()
+            return pd.DataFrame(
+                {
+                    'Object': movingaverage,
+                    'Method': ['moving_average'],
+                    'rmse': [rmse],
+                    'mape': [mape],
+                    'p': [0],
+                    'd': [diff_order],
+                    'q': [performance[0][0]],
+                    'P': [0],
+                    'D': [0],
+                    'Q': [0]
+                }
+            )
+
+        elif performance:
+            movingaverage = sm.tsa.ARIMA(boxcox_data, order=(0, 0, performance[0][0])).fit()
+            return pd.DataFrame(
+                {
+                    'Object': movingaverage,
+                    'Method': ['moving_average'],
+                    'rmse': [rmse],
+                    'mape': [mape],
+                    'p': [0],
+                    'd': [0],
+                    'q': [performance[0][0]],
+                    'P': [0],
+                    'D': [0],
+                    'Q': [0]
+                }
+            )
+
+        else:
+            return pd.DataFrame(
+                {
+                    'Object': None,
+                    'Method': ['moving_average'],
+                    'rmse': [np.inf],
+                    'mape': [np.inf],
+                    'p': [0],
+                    'd': [0],
+                    'q': [0],
+                    'P': [0],
+                    'D': [0],
+                    'Q': [0]
+                }
+            )
+
+    except Exception as e:
+        logging.error("Error while training Moving_Average: %s", e)
+        return pd.DataFrame(
+            {
+                'Object': None,
+                'Method': ['moving_average'],
+                'rmse': [np.inf],
+                'mape': [np.inf],
+                'p': [0],
+                'd': [0],
+                'q': [0],
+                'P': [0],
+                'D': [0],
+                'Q': [0]
+            }
+        )
+
+
+def arma(
+        pacf: list,
+        acf: list,
+        boxcox_data: pd.DataFrame,
+        stationary_data: pd.DataFrame,
+        test_len: int,
+        data: pd.DataFrame,
+        diff_order: int,
+        lmbda: float,
+        project: str
+):
+    """
+    Function to train Autoregressive Moving Average algorithm
+
+    Args:
+        pacf: partially auto correlated lags
+        acf: auto correlated lags
+        boxcox_data: log transformed data
+        stationary_data: difference data
+        test_len: length of data for testing
+        data: dataset
+        diff_order: level of differencing performed
+        lmbda: inverse value
+        project: name of prediction column
+
+    Return:
+        arma model object along with its performance metrics
+    """
+
+    try:
+        performance = []
+        for items in pacf:
+            for levels in acf:
+                if diff_order:
+                    arma = sm.tsa.ARIMA(stationary_data, order=(items[0], 0, levels[0])).fit()
+                    prediction = data.copy()
+                    prediction['arma_boxcox_diff'] = arma.predict(data.index[diff_order], data.index.max())
+                    prediction['arma_boxcox'] = prediction['arma_boxcox_diff'].cumsum()
+                    count = 0
+                    while count < diff_order:
+                        prediction['arma_boxcox'] = prediction['arma_boxcox'].add(boxcox_data[count])
+                        count += 1
+
+                else:
+                    arma = sm.tsa.ARIMA(boxcox_data, order=(items[0], 0, levels[0])).fit()
+                    prediction = data.copy()
+                    prediction['arma_boxcox'] = arma.predict(data.index.min(), data.index.max())
+
+                prediction['arma'] = inv_boxcox(prediction['arma_boxcox'], lmbda)
+                rmse = np.sqrt(mean_squared_error(data[project][-test_len:], prediction['arma'][-test_len:])).round(2)
+                mape = np.round(
+                    np.mean(
+                        np.abs(data[project][-test_len:] - prediction['arma'][-test_len:]) /
+                        data[project][-test_len:]
+                    ) * 100, 2
+                )
+
+            performance.append((items[0], levels[0], rmse, mape))
+        performance = sorted(performance, key=lambda x: x[2])
+        if diff_order and performance:
+            ar_ma = sm.tsa.ARIMA(stationary_data, order=(performance[0][0], 0, performance[0][1])).fit()
+            return pd.DataFrame(
+                {
+                    'Object': ar_ma,
+                    'Method': ['ar_ma'],
+                    'rmse': [rmse],
+                    'mape': [mape],
+                    'p': [performance[0][0]],
+                    'd': [diff_order],
+                    'q': [performance[0][1]],
+                    'P': [0],
+                    'D': [0],
+                    'Q': [0]
+                }
+            )
+
+        elif performance:
+            ar_ma = sm.tsa.ARIMA(boxcox_data, order=(performance[0][0], 0, performance[0][1])).fit()
+            return pd.DataFrame(
+                {
+                    'Object': ar_ma,
+                    'Method': ['ar_ma'],
+                    'rmse': [rmse],
+                    'mape': [mape],
+                    'p': [performance[0][0]],
+                    'd': [0],
+                    'q': [performance[0][1]],
+                    'P': [0],
+                    'D': [0],
+                    'Q': [0]
+                }
+            )
+
+        else:
+            return pd.DataFrame(
+                {
+                    'Object': None,
+                    'Method': ['ar_ma'],
+                    'rmse': [np.inf],
+                    'mape': [np.inf],
+                    'p': [0],
+                    'd': [0],
+                    'q': [0],
+                    'P': [0],
+                    'D': [0],
+                    'Q': [0]
+                }
+            )
+
+    except Exception as e:
+        logging.error("Error while training ARMA: %s", e)
+        return pd.DataFrame(
+            {
+                'Object': None,
+                'Method': ['ar_ma'],
+                'rmse': [np.inf],
+                'mape': [np.inf],
+                'p': [0],
+                'd': [0],
+                'q': [0],
+                'P': [0],
+                'D': [0],
+                'Q': [0]
+            }
+        )
+
+
+def arima(
+        boxcox_data: pd.DataFrame,
+        train_len: int,
+        data: pd.DataFrame,
+        lmbda: float,
+        project: str
+):
+    """
+    Function to train arima/sarima algorithm
+
+    Args:
+        boxcox_data: log transformed data
+        train_len: length of data for training
+        data: dataset
+        lmbda: inverse value
+        project: name of prediction column
+
+    Returns:
+        arima/sarima model object along with its performance metrics
+    """
+
+    try:
+        max_diff = np.floor((len(boxcox_data)/2)-1)
+        stepwise_model = auto_arima(
+            boxcox_data[:train_len], start_p=0, start_q=0, max_p=30, max_d=max_diff, max_q=30, m=12,
+            start_P=0, start_Q=0, max_P=30, max_Q=30, max_D=max_diff, seasonal=True, trace=True,
+            error_action='ignore', suppress_warnings=True, stepwise=True, n_jobs=-1
+        )
+
+        prediction = stepwise_model.predict(len(boxcox_data) - train_len)
+        prediction = inv_boxcox(prediction, lmbda)
+        rmse = np.sqrt(mean_squared_error(data[project][train_len:], prediction)).round(2)
+        mape = np.round(
+            np.mean(
+                np.abs(data[project][train_len:] - prediction)/
+                data[project][train_len:]
+            ) * 100, 2
+        )
+
+        stepwise_model = auto_arima(
+            boxcox_data, start_p=0, start_q=0, max_p=30, max_d=max_diff, max_q=30, m=12,
+            start_P=0, start_Q=0, max_P=30, max_Q=30, max_D=max_diff, seasonal=True, trace=True,
+            error_action='ignore', suppress_warnings=True, stepwise=True, n_jobs=-1
+        )
+        return pd.DataFrame(
+            {
+                'Object': stepwise_model,
+                'Method': ['ARIMA'],
+                'RMSE': [rmse],
+                'MAPE': [mape],
+                'p': [(stepwise_model.get_params()).get('order')[0]],
+                'd': [(stepwise_model.get_params()).get('order')[1]],
+                'q': [(stepwise_model.get_params()).get('order')[2]],
+                'P': [(stepwise_model.get_params()).get('seasonal_order')[0]],
+                'D': [(stepwise_model.get_params()).get('seasonal_order')[1]],
+                'Q': [(stepwise_model.get_params()).get('seasonal_order')[2]]
+            }
+        )
+    except Exception as e:
+        logging.error("Error while training ARIMA/SARIMA: %s", e)
+        return pd.DataFrame(
+            {
+                'Object': None,
+                'Method': ['ARIMA'],
+                'RMSE': [np.inf],
+                'MAPE': [np.inf],
+                'p': [0],
+                'd': [0],
+                'q': [0],
+                'P': [0],
+                'D': [0],
+                'Q': [0]
+            }
+        )

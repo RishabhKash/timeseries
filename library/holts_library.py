@@ -34,8 +34,8 @@ def metric_calculator(object_name: object, test_len: int, data: pd.DataFrame, pr
 
         return rmse, mape
 
-    except BaseException:
-        logging.exception('Error occurred while metric calculation')
+    except Exception as e:
+        logging.error('Error occurred while metric calculation: %s', e)
         return np.inf, np.inf
 
 
@@ -88,8 +88,8 @@ def simple_exponential(data: pd.DataFrame, train_len: int, test_len: int, projec
             }
         )
 
-    except BaseException:
-        logging.exception("Error encountered in simple_exponential!")
+    except Exception as e:
+        logging.error("Error while training simple_exponential_smoothing: %s", e)
         return pd.DataFrame(
             {
                 'Object': [None],
@@ -155,8 +155,8 @@ def additive_trend(data: pd.DataFrame, train_len: int, test_len: int, project: s
             }
         )
 
-    except BaseException:
-        logging.exception("Error encountered in additive_trend!")
+    except Exception as e:
+        logging.error("Error while training additive_trend_holts: %s", e)
         return pd.DataFrame(
             {
                 'Object': [None],
@@ -222,8 +222,8 @@ def multiplicative_trend(data: pd.DataFrame, train_len: int, test_len: int, proj
             }
         )
 
-    except BaseException:
-        logging.exception("Error encountered in multiplicative_trend!")
+    except Exception as e:
+        logging.error("Error while training multiplicative_trend_holts: %s", e)
         return pd.DataFrame(
             {
                 'Object': [None],
@@ -289,8 +289,8 @@ def a_a_seasonality(data: pd.DataFrame, train_len: int, test_len: int, project: 
             }
         )
 
-    except BaseException:
-        logging.exception("Error encountered in a_a_seasonality!")
+    except Exception as e:
+        logging.error("Error while training a_a_seasonality: %s", e)
         return pd.DataFrame(
             {
                 'Object': [None],
@@ -356,8 +356,8 @@ def a_m_seasonality(data: pd.DataFrame, train_len: int, test_len: int, project: 
             }
         )
 
-    except BaseException:
-        logging.exception("Error encountered in a_m_seasonality!")
+    except Exception as e:
+        logging.error("Error while training a_m_seasonality: %s", e)
         return pd.DataFrame(
             {
                 'Object': [None],
@@ -423,8 +423,8 @@ def m_a_seasonality(data: pd.DataFrame, train_len: int, test_len: int, project: 
             }
         )
 
-    except BaseException:
-        logging.exception("Error encountered in m_a_seasonality!")
+    except Exception as e:
+        logging.error("Error while training m_a_seasonality: %s", e)
         return pd.DataFrame(
             {
                 'Object': [None],
@@ -490,8 +490,8 @@ def m_m_seasonality(data: pd.DataFrame, train_len: int, test_len: int, project: 
             }
         )
 
-    except BaseException:
-        logging.exception("Error encountered in m_m_seasonality!")
+    except Exception as e:
+        logging.error("Error while training m_m_seasonality: %s", e)
         return pd.DataFrame(
             {
                 'Object': [None],
