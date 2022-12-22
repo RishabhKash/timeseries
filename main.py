@@ -13,4 +13,5 @@ data['revenue'] = pd.to_numeric(data['revenue'])
 data = data.groupby('year').agg({'revenue': 'sum'}).reset_index()
 
 data = data[data['year'] != '2022-12']
+data.tail()
 performance, predictions = train_predict(processed_data=data, project='revenue')

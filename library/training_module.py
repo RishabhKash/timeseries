@@ -130,6 +130,7 @@ def train_predict(
 
         else:
             print(boxcox_data.index.min(), end_date)
+            print(boxcox_data.head())
             result = performance.iloc[0][0].predict(boxcox_data.index.min(), end_date)
             result = pd.DataFrame(result)
             result.columns = ['Predicted']
