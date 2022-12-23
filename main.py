@@ -1,19 +1,21 @@
 import logging
 import os
 import pandas as pd
-from datetime import datetime
+from library.validation import folder_check
 from library.training_module import train_predict
 
 # changing the working directory
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+folder_check()
+
 # logging configuration
-# logging.basicConfig(
-#     filename="../logs/logfile.log",
-#     level=logging.INFO,
-#     format="%(asctime)s [%(levelname)s] %(message)s",
-#     datefmt="%Y-%m-%d %H-%M-%S"
-# )
+logging.basicConfig(
+    filename="../logs/logfile.log",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H-%M-%S"
+)
 
 data = pd.read_csv('/Users/rishabhkashyap/Downloads/MOCK_DATA.csv')
 data['year'] = pd.to_datetime(data['year']).apply(lambda x: x.strftime("%Y-%m"))
