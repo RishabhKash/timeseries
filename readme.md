@@ -2,7 +2,7 @@
 
 Once data is available in datetime & dependent column, this script can be used to auto train as well as auto select the best algorithm for time based predictions.
 
-Sample Data - 
+**Sample Data**
 
 ![img_2.png](img_2.png)
 
