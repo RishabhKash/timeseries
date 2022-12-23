@@ -31,6 +31,7 @@ def train_predict(
     end_date = (datetime.now() + relativedelta(months=5)).strftime("%Y-%m")
     model_performance = pd.DataFrame()
     data.loc[data[project] <= 0].interpolate(limit_direction="both")
+    data = data.set_index(data.columns[0])
 
     # Deciding test length basis total available data
     if (len(data) >= 3) and (len(data) <= 5):
@@ -129,8 +130,6 @@ def train_predict(
                 count += 1
 
         else:
-            print(boxcox_data.index.min(), end_date)
-            print(boxcox_data.head())
             result = performance.iloc[0][0].predict(boxcox_data.index.min(), end_date)
             result = pd.DataFrame(result)
             result.columns = ['Predicted']
@@ -138,7 +137,7 @@ def train_predict(
         result['Predicted'] = inv_boxcox(result['Predicted'], lmbda)
         result = result[-6:]
 
-    elif performance[0][1] in ('fbprophet'):
+    elif performance.iloc[0][1] == 'fbprophet':
         temp = performance.iloc[0][0].make_future_dataframe(periods=6, freq="M")
         future = performance.iloc[0][0].predict(temp)
         result = future[["ds", "yhat"]][-6:]

@@ -8,10 +8,19 @@ from sklearn.metrics import mean_squared_error
 def ideal_prophet(data: pd.DataFrame, train_len: int, test_len: int, project: str):
     """
     Function to train Facebook's prophet algorithm
+
+    Args:
+        data: dataset
+        train_len: length of training data
+        test_len: length of testing data
+        project: name of prediction column
+
+    Returns:
+        trained prophet model
     """
 
     try:
-        # data = data.reset_index()
+        data = data.reset_index()
         data = data.rename(columns={project: "y", data.columns[0]: "ds"})
         m = Prophet(daily_seasonality=False, weekly_seasonality=False)
         model = m.fit(data[:train_len])
@@ -27,11 +36,11 @@ def ideal_prophet(data: pd.DataFrame, train_len: int, test_len: int, project: st
         )
 
         m1 = Prophet(daily_seasonality=False, weekly_seasonality=False)
-        fb_prophet = m1.fit(data)
+        prophet = m1.fit(data)
 
         return pd.DataFrame(
             {
-                'Object': [fb_prophet],
+                'Object': [prophet],
                 'Method': ['fbprophet'],
                 'RMSE': [rmse],
                 'MAPE': [mape],
