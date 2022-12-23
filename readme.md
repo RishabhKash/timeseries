@@ -22,4 +22,4 @@ There are two functions -
 Both the functions return -
 
 - performance - RMSE & MAPE of the fit
-- predictions - half year prediction include current month
+- predictions - half year prediction including current month
