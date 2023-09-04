@@ -24,7 +24,7 @@ def make_stationary(data: pd.Series, project: str, alpha: float = 0.05):
         log transformed data, inverse value, stationary data & differencing order
     """
 
-    max_diff = np.floor((len(data)/2)-1)
+    max_diff = int(np.floor((len(data)/2)-1))
     boxcox_data, lmbda = stats.boxcox(data[project])
     boxcox_data = pd.Series(boxcox_data, index=data.index)
 
@@ -129,7 +129,7 @@ def auto_regressive(
         performance = []
         for items in pacf:
             if diff_order:
-                ar = sm.tsa.ARIMA(stationary_data, order=(items[0], 0, 0)).fit()
+                ar = sm.tsa.ARIMA(stationary_data[:-test_len], order=(items[0], 0, 0)).fit()
                 prediction = data.copy()
                 prediction['ar_boxcox_diff'] = ar.predict(stationary_data.index.min(), stationary_data.index.max())
                 prediction['ar_boxcox'] = prediction['ar_boxcox_diff'].cumsum()
@@ -139,7 +139,7 @@ def auto_regressive(
                     count += 1
 
             else:
-                ar = sm.tsa.ARIMA(boxcox_data, order=(items[0], 0, 0)).fit()
+                ar = sm.tsa.ARIMA(boxcox_data[:-test_len], order=(items[0], 0, 0)).fit()
                 prediction = data.copy()
                 prediction['ar_boxcox'] = ar.predict(boxcox_data.index.min(), boxcox_data.index.max())
 
@@ -254,7 +254,7 @@ def moving_average(
         performance = []
         for items in acf:
             if diff_order:
-                ma = sm.tsa.ARIMA(stationary_data, order=(0, 0, items[0])).fit()
+                ma = sm.tsa.ARIMA(stationary_data[:-test_len], order=(0, 0, items[0])).fit()
                 prediction = data.copy()
                 prediction['ma_boxcox_diff'] = ma.predict(data.index[diff_order], data.index.max())
                 prediction['ma_boxcox'] = prediction['ma_boxcox_diff'].cumsum()
@@ -264,7 +264,7 @@ def moving_average(
                     count += 1
 
             else:
-                ma = sm.tsa.ARIMA(boxcox_data, order=(0, 0, items[0])).fit()
+                ma = sm.tsa.ARIMA(boxcox_data[:-test_len], order=(0, 0, items[0])).fit()
                 prediction = data.copy()
                 prediction['ma_boxcox'] = ma.predict(data.index.min(), data.index.max())
 
@@ -381,7 +381,7 @@ def arma(
         for items in pacf:
             for levels in acf:
                 if diff_order:
-                    arma_model = sm.tsa.ARIMA(stationary_data, order=(items[0], 0, levels[0])).fit()
+                    arma_model = sm.tsa.ARIMA(stationary_data[:-test_len], order=(items[0], 0, levels[0])).fit()
                     prediction = data.copy()
                     prediction['arma_boxcox_diff'] = arma_model.predict(data.index[diff_order], data.index.max())
                     prediction['arma_boxcox'] = prediction['arma_boxcox_diff'].cumsum()
@@ -391,7 +391,7 @@ def arma(
                         count += 1
 
                 else:
-                    arma_model = sm.tsa.ARIMA(boxcox_data, order=(items[0], 0, levels[0])).fit()
+                    arma_model = sm.tsa.ARIMA(boxcox_data[:-test_len], order=(items[0], 0, levels[0])).fit()
                     prediction = data.copy()
                     prediction['arma_boxcox'] = arma_model.predict(data.index.min(), data.index.max())
 
@@ -496,7 +496,7 @@ def arima(
     """
 
     try:
-        max_diff = np.floor((len(boxcox_data)/2)-1)
+        max_diff = int(np.floor((len(boxcox_data)/2)-1))
         stepwise_model = auto_arima(
             boxcox_data[:train_len], start_p=0, start_q=0, max_p=30, max_d=max_diff, max_q=30, m=12,
             start_P=0, start_Q=0, max_P=30, max_Q=30, max_D=max_diff, seasonal=True, trace=True,
